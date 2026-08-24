@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Config } from '../config.js';
 import { FaceitService } from './service.js';
 
@@ -32,10 +32,6 @@ function faceitPlayer(steamId = STEAM_ID) {
 }
 
 describe('FaceitService', () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-  });
-
   afterEach(() => {
     vi.unstubAllGlobals();
     vi.useRealTimers();
@@ -86,6 +82,7 @@ describe('FaceitService', () => {
   });
 
   it('retries 429 with backoff and returns success when FACEIT recovers', async () => {
+    vi.useFakeTimers();
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(new Response(null, { status: 429 }))
@@ -101,7 +98,22 @@ describe('FaceitService', () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
+  it('returns RATE_LIMITED when 429 persists through all retry attempts', async () => {
+    vi.useFakeTimers();
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 429 }));
+    vi.stubGlobal('fetch', fetchMock);
+    const service = new FaceitService(config);
+
+    const lookup = service.lookup(STEAM_ID);
+    await vi.runAllTimersAsync();
+    const result = await lookup;
+
+    expect(result.status).toBe('RATE_LIMITED');
+    expect(fetchMock).toHaveBeenCalledTimes(4);
+  });
+
   it.each([502, 503, 504])('retries transient HTTP %i responses and returns API_ERROR after exhaustion', async (status) => {
+    vi.useFakeTimers();
     const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status }));
     vi.stubGlobal('fetch', fetchMock);
     const service = new FaceitService(config);
@@ -115,6 +127,7 @@ describe('FaceitService', () => {
   });
 
   it('retries network failures and returns API_ERROR after exhaustion', async () => {
+    vi.useFakeTimers();
     const fetchMock = vi.fn().mockRejectedValue(new TypeError('network failed'));
     vi.stubGlobal('fetch', fetchMock);
     const service = new FaceitService(config);
