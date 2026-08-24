@@ -71,13 +71,21 @@ describe('FaceitService', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
-  it('rejects invalid FACEIT JSON and does not cache API errors', async () => {
-    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ nickname: 'missing-player-id' }));
+  it('rejects invalid FACEIT JSON without caching the API error', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(jsonResponse({ nickname: 'missing-player-id' }))
+      .mockResolvedValueOnce(jsonResponse(faceitPlayer()));
     vi.stubGlobal('fetch', fetchMock);
     const service = new FaceitService(config);
 
-    expect((await service.lookup(STEAM_ID)).status).toBe('API_ERROR');
-    expect((await service.lookup(STEAM_ID)).status).toBe('API_ERROR');
+    const invalid = await service.lookup(STEAM_ID);
+    const recovered = await service.lookup(STEAM_ID);
+    const cached = await service.lookup(STEAM_ID);
+
+    expect(invalid.status).toBe('API_ERROR');
+    expect(recovered.status).toBe('OK');
+    expect(cached).toEqual(recovered);
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
