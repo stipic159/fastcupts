@@ -21,3 +21,7 @@ pnpm test
 ```
 
 The extension requests only `storage` and `downloads`; configure the backend host with `WXT_SCOUT_API_BASE_URL` at build time.
+
+# WARNING!
+
+This code is completely written by a AI
