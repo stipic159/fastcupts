@@ -18,9 +18,14 @@ query GetTournament($tournamentId: Int!) {
 }`;
 
 const GET_TOURNAMENT_ROSTERS = `
-query GetTournamentRosters($tournamentId: Int!, $states: [tournament_roster_state!]!, $limit: Int!) {
+query GetTournamentRosters($tournamentId: Int!, $createdAtGt: timestamptz, $states: [tournament_roster_state!]!, $limit: Int!, $teamName: String) {
   rosters: tournament_rosters(
-    where: { tournament_id: { _eq: $tournamentId }, state: { _in: $states } }
+    where: {
+      tournament_id: { _eq: $tournamentId }
+      state: { _in: $states }
+      created_at: { _gt: $createdAtGt }
+      team: { name: { _ilike: $teamName } }
+    }
     limit: $limit
   ) {
     id
@@ -68,8 +73,10 @@ export async function getFastcupTournament(id: number) {
 export async function getFastcupTournamentRosters(id: number) {
   const result = await fastcupGraphql<RostersResponse>(GET_TOURNAMENT_ROSTERS, {
     tournamentId: id,
+    createdAtGt: null,
     states: ['ACTIVE', 'REJECTED', 'PENDING', 'BANNED'],
     limit: 512,
+    teamName: null,
   });
 
   return result.rosters.map((roster) => ({
