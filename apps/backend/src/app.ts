@@ -28,8 +28,8 @@ export async function buildApp(config: Config) {
     return { tournament };
   });
 
-  app.get('/v1/fastcup/tournaments/:id/teams', async (request, reply) => {
-    const id = Number((request.params as { id: string }).id);
+  app.get('/v1/fastcup/scout', async (request, reply) => {
+    const id = Number((request.query as { id?: string }).id);
     if (!Number.isInteger(id)) {
       return reply.code(400).send({ error: 'Invalid tournament id' });
     }
