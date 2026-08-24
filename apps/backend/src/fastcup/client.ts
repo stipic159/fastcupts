@@ -11,7 +11,11 @@ export async function fastcupGraphql<T>(query: string, variables?: Record<string
     throw new Error(`FASTCUP GraphQL HTTP ${response.status}`);
   }
 
-  const json = await response.json() as { data?: T; errors?: unknown };
+  const json = await response.json() as { data?: T; errors?: Array<{ message?: string }> };
+
+  if (json.errors?.length) {
+    throw new Error(`FASTCUP GraphQL: ${json.errors.map((error) => error.message ?? 'unknown error').join(', ')}`);
+  }
 
   if (!json.data) {
     throw new Error('FASTCUP GraphQL returned no data');
