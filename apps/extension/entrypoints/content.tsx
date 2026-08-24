@@ -1,6 +1,7 @@
 import { render } from 'preact';
 import { TournamentPanel } from '../src/ui/TournamentPanel';
 import { observeFastcupPage } from '../src/fastcup/observer';
+import { scoutCurrentTournament } from '../src/fastcup/scout';
 
 export default defineContentScript({
   matches: ['https://cs2.fastcup.net/*'],
@@ -18,6 +19,11 @@ export default defineContentScript({
         if (container) render(null, container);
       },
     });
+
+    const match = location.pathname.match(/tournaments\/(\d+)/);
+    if (match) {
+      void scoutCurrentTournament(Number(match[1]));
+    }
 
     observeFastcupPage(() => console.debug('FASTCUP content changed'));
     ui.mount();
