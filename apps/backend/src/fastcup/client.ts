@@ -1,10 +1,14 @@
 const FASTCUP_GRAPHQL_URL = 'https://hasura.fastcup.net/v1/graphql';
 
-export async function fastcupGraphql<T>(query: string, variables?: Record<string, unknown>): Promise<T> {
+export async function fastcupGraphql<T>(
+  query: string,
+  variables?: Record<string, unknown>,
+  operationName?: string,
+): Promise<T> {
   const response = await fetch(FASTCUP_GRAPHQL_URL, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ query, variables }),
+    body: JSON.stringify({ query, variables, operationName }),
   });
 
   if (!response.ok) {
