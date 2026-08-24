@@ -66,7 +66,7 @@ type RostersResponse = {
 };
 
 export async function getFastcupTournament(id: number) {
-  const result = await fastcupGraphql<TournamentResponse>(GET_TOURNAMENT, { tournamentId: id });
+  const result = await fastcupGraphql<TournamentResponse>(GET_TOURNAMENT, { tournamentId: id }, 'GetTournament');
   return result.tournament;
 }
 
@@ -77,7 +77,7 @@ export async function getFastcupTournamentRosters(id: number) {
     states: ['ACTIVE', 'REJECTED', 'PENDING', 'BANNED'],
     limit: 512,
     teamName: null,
-  });
+  }, 'GetTournamentRosters');
 
   return result.rosters.map((roster) => ({
     id: roster.id,
