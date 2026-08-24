@@ -8,92 +8,25 @@ query GetTournament($tournamentId: Int!) {
     state
     slots
     prizeFund: prize_fund
-    stages(order_by: { number: asc }) {
-      id
-      name
-      state
-      type
-    }
+    stages(order_by: { number: asc }) { id name state type }
   }
 }`;
 
-const GET_TOURNAMENT_ROSTERS = `
-query GetTournamentRosters($tournamentId: Int!, $createdAtGt: timestamptz, $states: [tournament_roster_state!]!, $limit: Int!, $teamName: String) {
+const GET_CURRENT_USER_TOURNAMENT_ROSTERS = `
+query GetCurrentUserTournamentRosters($tournamentId: Int!, $currentUserId: Int!, $gameId: smallint!) {
   rosters: tournament_rosters(
-    where: {tournament_id: {_eq: $tournamentId}, created_at: {_gt: $createdAtGt}, state: {_in: $states}, team: {name: {_ilike: $teamName}}}
-    order_by: {created_at: asc}
-    limit: $limit
+    where: {tournament_id: {_eq: $tournamentId}, state: {_in: ["ACTIVE", "REJECTED", "PENDING", "BANNED"]}, _or: [{members: {user_id: {_eq: $currentUserId}}}, {team: {managers: {accepted_at: {_is_null: false}, finished_at: {_is_null: true}, user_id: {_eq: $currentUserId}}}}]}
   ) {
     id
     state
     captainId: captain_id
-    createdAt: created_at
-    team {
-      ...TeamPrimaryParts
-      country {
-        ...CountryPrimaryParts
-        ...CountryNameParts
-        __typename
-      }
-      __typename
-    }
+    team { id tag name logo verified }
     members {
       id
       role
-      user {
-        ...UserPrimaryParts
-        country {
-          ...CountryPrimaryParts
-          ...CountryNameParts
-          __typename
-        }
-        __typename
-      }
-      __typename
+      user { id nickName: nick_name avatar }
     }
-    __typename
   }
-}
-
-fragment TeamPrimaryParts on teams {
-  id
-  tag
-  name
-  logo
-  verified
-  __typename
-}
-
-fragment CountryPrimaryParts on countries {
-  id
-  iso2
-  __typename
-}
-
-fragment CountryNameParts on countries {
-  nameEn: name_en
-  nameRu: name_ru
-  nameDe: name_de
-  namePl: name_pl
-  namePt: name_pt
-  nameHbs: name_hbs
-  nameUk: name_uk
-  nameFr: name_fr
-  nameEs: name_es
-  nameTr: name_tr
-  __typename
-}
-
-fragment UserPrimaryParts on users {
-  id
-  link
-  avatar
-  online
-  verified
-  isMobile: is_mobile
-  nickName: nick_name
-  animatedAvatar: animated_avatar
-  __typename
 }`;
 
 type TournamentResponse = {
@@ -112,7 +45,7 @@ type RostersResponse = {
     id: number;
     state: string;
     team: { id: number; tag: string; name: string; logo: string | null } | null;
-    members: Array<{ user: { id: number; nickName: string } | null }>;
+    members: Array<{ user: { id: number; nickName: string; avatar?: string | null } | null }>;
   }>;
 };
 
@@ -122,13 +55,11 @@ export async function getFastcupTournament(id: number) {
 }
 
 export async function getFastcupTournamentRosters(id: number) {
-  const result = await fastcupGraphql<RostersResponse>(GET_TOURNAMENT_ROSTERS, {
+  const result = await fastcupGraphql<RostersResponse>(GET_CURRENT_USER_TOURNAMENT_ROSTERS, {
     tournamentId: id,
-    createdAtGt: null,
-    states: ['ACTIVE'],
-    limit: 21,
-    teamName: null,
-  }, 'GetTournamentRosters');
+    currentUserId: 3584698,
+    gameId: 3,
+  }, 'GetCurrentUserTournamentRosters');
 
   return result.rosters.map((roster) => ({
     id: roster.id,
