@@ -1,0 +1,23 @@
+import cors from '@fastify/cors';
+import rateLimit from '@fastify/rate-limit';
+import Fastify from 'fastify';
+import { FaceitBatchRequestSchema } from '@fastcup/shared';
+import type { Config } from './config.js';
+import { FaceitService } from './faceit/service.js';
+
+export async function buildApp(config: Config) {
+  const app = Fastify({ logger: true });
+  await app.register(cors, { origin: config.CORS_ORIGIN });
+  await app.register(rateLimit, { max: 120, timeWindow: '1 minute' });
+  const faceit = new FaceitService(config);
+
+  app.get('/health', async () => ({ status: 'ok', faceitConfigured: Boolean(config.FACEIT_API_KEY) }));
+  app.post('/v1/faceit/players/batch', { config: { rateLimit: { max: 30, timeWindow: '1 minute' } } }, async (request, reply) => {
+    const parsed = FaceitBatchRequestSchema.safeParse(request.body);
+    if (!parsed.success) return reply.code(400).send({ error: 'Invalid SteamID64 batch', details: parsed.error.flatten() });
+    const steamIds = [...new Set(parsed.data.steamIds)];
+    const players = await Promise.all(steamIds.map((steamId) => faceit.lookupConcurrent(() => faceit.lookup(steamId))));
+    return { players };
+  });
+  return app;
+}
