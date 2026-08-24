@@ -29,28 +29,41 @@ query GetTournamentRosters($tournamentId: Int!, $createdAtGt: timestamptz, $stat
     captainId: captain_id
     createdAt: created_at
     team {
-      id
-      tag
-      name
-      logo
-      verified
+      ...TeamPrimaryParts
       __typename
     }
     members {
       id
       role
       user {
-        id
-        nickName: nick_name
-        avatar
-        online
-        verified
+        ...UserPrimaryParts
         __typename
       }
       __typename
     }
     __typename
   }
+}
+
+fragment TeamPrimaryParts on teams {
+  id
+  tag
+  name
+  logo
+  verified
+  __typename
+}
+
+fragment UserPrimaryParts on users {
+  id
+  link
+  avatar
+  online
+  verified
+  isMobile: is_mobile
+  nickName: nick_name
+  animatedAvatar: animated_avatar
+  __typename
 }`;
 
 type TournamentResponse = {
@@ -83,7 +96,7 @@ export async function getFastcupTournamentRosters(id: number) {
     tournamentId: id,
     createdAtGt: null,
     states: ['ACTIVE'],
-    limit: 100,
+    limit: 21,
     teamName: null,
   }, 'GetTournamentRosters');
 
