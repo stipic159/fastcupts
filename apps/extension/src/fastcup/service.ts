@@ -2,7 +2,7 @@ const BACKEND_URL = 'http://127.0.0.1:3000';
 
 export async function getFastcupTournamentRosters(tournamentId: number) {
   const response = await fetch(
-    `${BACKEND_URL}/v1/fastcup/tournaments/${tournamentId}/teams`,
+    `${BACKEND_URL}/v1/fastcup/scout?id=${tournamentId}`,
   );
 
   if (!response.ok) {
