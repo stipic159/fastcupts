@@ -30,6 +30,11 @@ query GetTournamentRosters($tournamentId: Int!, $createdAtGt: timestamptz, $stat
     createdAt: created_at
     team {
       ...TeamPrimaryParts
+      country {
+        ...CountryPrimaryParts
+        ...CountryNameParts
+        __typename
+      }
       __typename
     }
     members {
@@ -37,6 +42,11 @@ query GetTournamentRosters($tournamentId: Int!, $createdAtGt: timestamptz, $stat
       role
       user {
         ...UserPrimaryParts
+        country {
+          ...CountryPrimaryParts
+          ...CountryNameParts
+          __typename
+        }
         __typename
       }
       __typename
@@ -51,6 +61,26 @@ fragment TeamPrimaryParts on teams {
   name
   logo
   verified
+  __typename
+}
+
+fragment CountryPrimaryParts on countries {
+  id
+  iso2
+  __typename
+}
+
+fragment CountryNameParts on countries {
+  nameEn: name_en
+  nameRu: name_ru
+  nameDe: name_de
+  namePl: name_pl
+  namePt: name_pt
+  nameHbs: name_hbs
+  nameUk: name_uk
+  nameFr: name_fr
+  nameEs: name_es
+  nameTr: name_tr
   __typename
 }
 
