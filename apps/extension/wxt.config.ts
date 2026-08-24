@@ -1,7 +1,7 @@
 import preact from '@preact/preset-vite';
 import { defineConfig } from 'wxt';
 
-const apiBaseUrl = process.env.WXT_SCOUT_API_BASE_URL ?? 'https://api.example.com';
+const apiBaseUrl = process.env.WXT_SCOUT_API_BASE_URL ?? 'http://127.0.0.1:3000';
 const backendHostPermission = `${new URL(apiBaseUrl).origin}/*`;
 
 export default defineConfig({
