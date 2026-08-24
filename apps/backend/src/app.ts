@@ -4,7 +4,7 @@ import Fastify from 'fastify';
 import { FaceitBatchRequestSchema } from '@fastcup/shared';
 import type { Config } from './config.js';
 import { FaceitService } from './faceit/service.js';
-import { getFastcupTournament } from './fastcup/service.js';
+import { getFastcupTournament, getFastcupTournamentRosters } from './fastcup/service.js';
 
 export async function buildApp(config: Config) {
   const app = Fastify({ logger: true });
@@ -26,6 +26,15 @@ export async function buildApp(config: Config) {
     }
 
     return { tournament };
+  });
+
+  app.get('/v1/fastcup/tournaments/:id/teams', async (request, reply) => {
+    const id = Number((request.params as { id: string }).id);
+    if (!Number.isInteger(id)) {
+      return reply.code(400).send({ error: 'Invalid tournament id' });
+    }
+
+    return { rosters: await getFastcupTournamentRosters(id) };
   });
 
   app.post('/v1/faceit/players/batch', { config: { rateLimit: { max: 30, timeWindow: '1 minute' } } }, async (request, reply) => {
